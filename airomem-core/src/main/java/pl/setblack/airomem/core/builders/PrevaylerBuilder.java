@@ -7,6 +7,7 @@ package pl.setblack.airomem.core.builders;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.security.AnyTypePermission;
 import org.prevayler.Prevayler;
 import org.prevayler.PrevaylerFactory;
 import org.prevayler.foundation.serialization.JavaSerializer;
@@ -58,7 +59,7 @@ public class PrevaylerBuilder<T extends Serializable> {
         forceOverwrite = false;
         allowCreate = false;
         folder = PREVAYLER_DEFAULT_FOLDER;
-        journalDiskSync = true;
+        journalDiskSync = false;
         useFastJournalSerialization = true;
         useFastSnapshotSerialization = false;
         useRoyalFoodTester = true;
@@ -159,7 +160,7 @@ public class PrevaylerBuilder<T extends Serializable> {
             PrevaylerFactory<RoyalFoodTester> factory = new PrevaylerFactory<>();
             factory.configurePrevalentSystem(createRoot());
 
-            factory.configureJournalDiskSync(true);
+            factory.configureJournalDiskSync(this.isJournalDiskSync());
             factory.configurePrevalenceDirectory(PersistenceDiskHelper.calcFolderName(this.getFolder()));
 
             factory.configureJournalSerializer(createSerializer(isUseFastJournalSerialization()));
@@ -189,6 +190,11 @@ public class PrevaylerBuilder<T extends Serializable> {
         return copy;
     }
 
+    public PrevaylerBuilder<T> withJournalSync(final boolean sync) {
+        final PrevaylerBuilder copy = new PrevaylerBuilder(this);
+        copy.journalDiskSync = sync;
+        return copy;
+    }
 
     public PrevaylerBuilder<T> forceOverwrite(final boolean overwrite) {
         final PrevaylerBuilder copy = new PrevaylerBuilder(this);
@@ -232,6 +238,7 @@ public class PrevaylerBuilder<T extends Serializable> {
 
     private T readXML(Path xmlFile) {
         final XStream xs = new XStream();
+        xs.addPermission(AnyTypePermission.ANY);
         return Politician.beatAroundTheBush(() -> (T) xs.fromXML(Files.newInputStream(xmlFile)));
     }
 
